@@ -113,7 +113,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
         //set up the device list so we can populate it with bluetooth devices we find.
         ListView deviceList = (ListView) findViewById(R.id.deviceList);
-        ArrayList<String> listItems = new ArrayList<String>();
+        ArrayList<String> listItems = new ArrayList<>();
         ArrayAdapter<String> adapter;
 
         Set<BluetoothDevice> bondedDevices = mBluetoothAdapter.getBondedDevices();
@@ -123,10 +123,9 @@ public class MainActivity extends Activity implements SensorEventListener {
         } else {
             for (BluetoothDevice iterator : bondedDevices) {
                 if(iterator.getAddress().equals(Globals.DOOR_ADDRESS)){
-                    BluetoothDevice device=iterator; //device is an object of type BluetoothDevice
                     bt_found=true;
                     try {
-                        socket = device.createRfcommSocketToServiceRecord(Globals.BT_UUID);
+                        socket = iterator.createRfcommSocketToServiceRecord(Globals.BT_UUID);
                         socket.connect();
                         outputStream = socket.getOutputStream();
                         inputStream = socket.getInputStream();
@@ -165,7 +164,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                     }
                 }
                 correctPassword.show();
-                //TODO: Send Actuate Request via BT
+                byte write_buffer[] = {(byte) entries[0], (byte) entries[1], (byte) entries[2], (byte) entries[3]};
+                try {
+                    outputStream.write(write_buffer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             }
         });
