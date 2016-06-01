@@ -23,6 +23,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Set;
 
+import allisondoami.ee3door3.Globals;
+
 public class MainActivity extends Activity implements SensorEventListener {
     float[] history = new float[2];
     int[] direction = {5};
@@ -31,6 +33,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     Toast showNotification;
     Toast leftMove;
     Toast rightMove;
+    Toast btConnected_toast;
     Boolean sensorOn = false;
     Button setPasswordButton;
     Button enterPasswordButton;
@@ -85,6 +88,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         CharSequence text3 = "Please enter password again";
         CharSequence text4 = "You moved right";
         CharSequence text5 = "You moved left";
+        CharSequence btConnected_text = "You are connected!";
         int duration = Toast.LENGTH_SHORT;
 
         correctPassword = Toast.makeText(this, text, duration);
@@ -92,6 +96,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         showNotification = Toast.makeText(this,text3, duration);
         rightMove = Toast.makeText(this, text4, duration);
         leftMove = Toast.makeText(this, text5, duration);
+        btConnected_toast = Toast.makeText(this, btConnected_text, duration);
 
         //Bluetooth
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -114,9 +119,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             Toast.makeText(getApplicationContext(),"Please Pair the Device first",Toast.LENGTH_SHORT).show();
         } else {
             for (BluetoothDevice iterator : bondedDevices) {
-                if(iterator.getAddress().equals(iterator.getName())){
+                if(iterator.getAddress().equals(Globals.DOOR_ADDRESS)){
                     BluetoothDevice device=iterator; //device is an object of type BluetoothDevice
                     found=true;
+                    btConnected_toast.show();
                     break;
                 }
             }
@@ -134,46 +140,22 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         enterPasswordButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                sensorOn = true;
-                entries[entryNum] = direction[0];
-                entryNum++;
+            sensorOn = true;
+            entries[entryNum] = direction[0];
+            entryNum++;
 
-                //entries is full. check for correctness.
-                if(entryNum >= 4) {
-                    entryNum = 0;
-                    for(int i = 0; i < 4; i++) {
-                        if(entries[i] != savedPassword[i]) {
-                            incorrectPassword.show();
-                            return;
-                        }
+            //entries is full. check for correctness.
+            if(entryNum >= 4) {
+                entryNum = 0;
+                for(int i = 0; i < 4; i++) {
+                    if(entries[i] != savedPassword[i]) {
+                        incorrectPassword.show();
+                        return;
                     }
-                    correctPassword.show();
                 }
-//                final SensorEventListener mySensorEventListener = new SensorEventListener() {
-//
-//                };
-/*            Boolean isTrue = true;
-            long currTime = System.currentTimeMillis();
-                for (int i = 0; i < 4; i++) {
-                    if ((currTime - lastUpdate) > 1000) {
-                        lastUpdate = currTime;
-                        if (direction[0] != savedPassword[i]) {
-                            Log.v("alex", "wrong input");
-                            isTrue = false;
-                        }
-                    }
-                    //i--;
-                }
-                //if the password is right
-                if (isTrue == true) {
-                    //int i = sendMessage(1);
-                      correctPassword.show();
-                } /*else {
-                    //if the password is wrong
-                    incorrectPassword.show();
-                }*/
-              //  sensorOn = false;
-
+                correctPassword.show();
+                //TODO: Send Actuate Request via BT
+            }
             }
         });
     }
