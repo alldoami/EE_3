@@ -70,7 +70,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         super.onCreate(savedInstanceState);
 
-
         SensorManager manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometer = manager.getSensorList(Sensor.TYPE_ACCELEROMETER).get(0);
         manager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
@@ -117,13 +116,11 @@ public class MainActivity extends Activity implements SensorEventListener {
         ArrayAdapter<String> adapter;
 
         Set<BluetoothDevice> bondedDevices = mBluetoothAdapter.getBondedDevices();
-        Boolean bt_found = false;
         if(bondedDevices.isEmpty()) {
             Toast.makeText(getApplicationContext(),"Please Pair the Device first",Toast.LENGTH_SHORT).show();
         } else {
             for (BluetoothDevice iterator : bondedDevices) {
                 if(iterator.getAddress().equals(Globals.DOOR_ADDRESS)){
-                    bt_found=true;
                     try {
                         socket = iterator.createRfcommSocketToServiceRecord(Globals.BT_UUID);
                         socket.connect();
@@ -157,23 +154,27 @@ public class MainActivity extends Activity implements SensorEventListener {
             //entries is full. check for correctness.
             if(entryNum >= 4) {
                 entryNum = 0;
+                boolean valid = true;
                 for(int i = 0; i < 4; i++) {
                     if(entries[i] != savedPassword[i]) {
-                        incorrectPassword.show();
-                        return;
+                        valid = false;
                     }
                 }
-                correctPassword.show();
+                if(valid) {
+                    correctPassword.show();
+                } else {
+                    incorrectPassword.show();
+                }
                 byte write_buffer[] = {(byte) entries[0], (byte) entries[1], (byte) entries[2], (byte) entries[3]};
                 try {
                     outputStream.write(write_buffer);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-            }
-        });
-    }
+            } //end if(entries are full)
+            } //end onclick callback function
+        }); //end onclick listener setup
+    } //end oncreate
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -191,31 +192,24 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     }
 
-    //sends message to android once door should be open
-   // int sendMessage(int p){
-    //    return p;
-   // }
-
     @Override
     public void onSensorChanged(SensorEvent event) {
         Log.v("control flow", "onsensorchanged called");
-        //if (sensorOn) {
-            float xChange = history[0] - event.values[0];
-            history[0] = event.values[0];
-            long curTime = System.currentTimeMillis();
-            if ((curTime - lastUpdate) > 1000) {
-                lastUpdate = curTime;
-                if (xChange > 2) {
-                    direction[0] = 0;
-                    leftMove.show();
-                    Log.v("Dir", "Left");
-                } else if (xChange < -2) {
-                    direction[0] = 1;
-                    rightMove.show();
-                    Log.v("Dir", "Right");
-                }
+        float xChange = history[0] - event.values[0];
+        history[0] = event.values[0];
+        long curTime = System.currentTimeMillis();
+        if ((curTime - lastUpdate) > 1000) {
+            lastUpdate = curTime;
+            if (xChange > 2) {
+                direction[0] = 0;
+                leftMove.show();
+                Log.v("Dir", "Left");
+            } else if (xChange < -2) {
+                direction[0] = 1;
+                rightMove.show();
+                Log.v("Dir", "Right");
             }
-       // }
+        }
     }
 
     @Override
@@ -230,11 +224,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             Log.v("SavedPassword", p);
         }
     }
-
-//    @Override
-//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-//
-//    }
 
     protected void onPause() {
         super.onPause();
