@@ -1,8 +1,10 @@
 package allisondoami.ee3door3;
 
+import android.app.Activity;
 import android.app.FragmentManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -10,20 +12,18 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Set;
-
-import allisondoami.ee3door3.Globals;
 
 public class MainActivity extends Activity implements SensorEventListener {
     float[] history = new float[2];
@@ -47,6 +47,9 @@ public class MainActivity extends Activity implements SensorEventListener {
     int entryNum = 0;
 
     BluetoothAdapter mBluetoothAdapter;
+    BluetoothSocket socket;
+    OutputStream outputStream;
+    InputStream inputStream;
 
     public enum REQUEST_CODES {
         REQUEST_ENABLE_BT(1);
@@ -54,7 +57,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         private final int value;
 
         //set all enum values to ints
-        private REQUEST_CODES(int value) {
+        REQUEST_CODES(int value) {
             this.value = value;
         }
         public final int getInt() { //getter
@@ -114,15 +117,23 @@ public class MainActivity extends Activity implements SensorEventListener {
         ArrayAdapter<String> adapter;
 
         Set<BluetoothDevice> bondedDevices = mBluetoothAdapter.getBondedDevices();
-        Boolean found = false;
+        Boolean bt_found = false;
         if(bondedDevices.isEmpty()) {
             Toast.makeText(getApplicationContext(),"Please Pair the Device first",Toast.LENGTH_SHORT).show();
         } else {
             for (BluetoothDevice iterator : bondedDevices) {
                 if(iterator.getAddress().equals(Globals.DOOR_ADDRESS)){
                     BluetoothDevice device=iterator; //device is an object of type BluetoothDevice
-                    found=true;
-                    btConnected_toast.show();
+                    bt_found=true;
+                    try {
+                        socket = device.createRfcommSocketToServiceRecord(Globals.BT_UUID);
+                        socket.connect();
+                        outputStream = socket.getOutputStream();
+                        inputStream = socket.getInputStream();
+                        btConnected_toast.show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 }
             }
