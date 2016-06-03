@@ -16,7 +16,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -111,7 +110,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             startActivityForResult(enableBtIntent, REQUEST_CODES.REQUEST_ENABLE_BT.getInt());
         }
         //set up the device list so we can populate it with bluetooth devices we find.
-        ListView deviceList = (ListView) findViewById(R.id.deviceList);
         ArrayList<String> listItems = new ArrayList<>();
         ArrayAdapter<String> adapter;
 
@@ -150,7 +148,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             sensorOn = true;
             entries[entryNum] = direction[0];
             entryNum++;
-
+            byte write_buffer[] = {1}; 
             //entries is full. check for correctness.
             if(entryNum >= 4) {
                 entryNum = 0;
@@ -158,6 +156,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 for(int i = 0; i < 4; i++) {
                     if(entries[i] != savedPassword[i]) {
                         valid = false;
+                        write_buffer[0] = 0;
                     }
                 }
                 if(valid) {
@@ -165,7 +164,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 } else {
                     incorrectPassword.show();
                 }
-                byte write_buffer[] = {(byte) entries[0], (byte) entries[1], (byte) entries[2], (byte) entries[3]};
+
                 try {
                     outputStream.write(write_buffer);
                 } catch (IOException e) {
